@@ -135,12 +135,13 @@ contract DSCEngine is ReentrancyGuard {
         moreThanZero(amountCollateral)
         isAllowedToken(tokenCollateralAddress)
     {
+        uint256 collateralAssetsBefore = IERC20(tokenCollateralAddress).balanceOf(address(this));
         s_collateralDeposit[msg.sender][tokenCollateralAddress] += amountCollateral;
-        emit DepositingCollateral(msg.sender, tokenCollateralAddress, amountCollateral);
         bool tranferSuccess = IERC20(tokenCollateralAddress).transferFrom(msg.sender, address(this), amountCollateral);
-        if (!tranferSuccess) {
+        if (!tranferSuccess && (IERC20(tokenCollateralAddress).balanceOf(address(this)) >= collateralAssetsBefore + amountCollateral)) {
             revert DSCEngine__TrasnferFailed();
         }
+        emit DepositingCollateral(msg.sender, tokenCollateralAddress, amountCollateral);
     }
     /**
      * @notice this function burn dsc and redeem the collateral in the same transaction; burn() and redeemCollateral() functions perform the checks
